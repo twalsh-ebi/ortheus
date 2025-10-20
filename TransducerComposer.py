@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -69,7 +69,7 @@ class Transducer:
         return self.inverseMatrix[state].copy()
         
     def getStateNames(self, stateType=None):
-        if stateType == None:
+        if stateType is None:
             return list(self.statesList)
         return [ i for i in self.statesList if self.getStateType(i) == stateType ]
     
@@ -80,12 +80,12 @@ class Transducer:
         return self.stateTypes[state]
     
     def report(self):
-        print "Reporting on transducer"
-        print "State names", " ".join(self.getStateNames())
+        print("Reporting on transducer")
+        print("State names", " ".join(self.getStateNames()))
         for fS in self.getStateNames():
             i = self.getTransitionsFrom(fS)
             for tS in i.keys():
-                print "From state %s, to state %s, value %s" % (fS, tS, i[tS])
+                print("From state %s, to state %s, value %s" % (fS, tS, i[tS]))
                 
 ########################################################
 ########################################################
@@ -94,19 +94,19 @@ class Transducer:
 ########################################################
 
 def parseStateLine(line):
-    name = re.compile("\(name ([^)]*)\)").search(line).group(1)
-    type = re.compile("\(type ([^)]*)\)").search(line).group(1)
+    name = re.compile("\\(name ([^)]*)\\)").search(line).group(1)
+    type = re.compile("\\(type ([^)]*)\\)").search(line).group(1)
     hash = { 'start':START, 'end':END, 'wait':SILENT, 
              'silent':SILENT, 'insert':INSERT, 'match':MATCH,
              'delete':DELETE }
     return name, hash[type]
 
 def parseTransitionLine(line):
-    fState = re.compile("\(from ([^)]*)\)").search(line).group(1)
-    tState = re.compile("\(to ([^)]*)\)").search(line).group(1)
-    s = re.compile("\(label ([^)]*)\)").search(line)
+    fState = re.compile("\\(from ([^)]*)\\)").search(line).group(1)
+    tState = re.compile("\\(to ([^)]*)\\)").search(line).group(1)
+    s = re.compile("\\(label ([^)]*)\\)").search(line)
     value = []
-    if s != None:    
+    if s is not None:
         value = [ s.group(1) ]
     return fState, tState, value
 
@@ -115,7 +115,7 @@ def parseInputTransducerFile(inputFile):
     The transducer must contain three models, in order the branch-X model,
     the branch-Z model and finally the root model.
     """
-    inputFile = open(inputFile, 'r')
+    inputFile = open(inputFile, 'r', encoding='ascii')
     def parseTransducer(inputFile):
         line = getNextNonCommentLine(inputFile)
         transducer = Transducer()
@@ -146,7 +146,7 @@ def writeModel(states, transitions, outputFile):
     """
     def fn(stateName):
         return stateName.replace('/', '')
-    outputFile = open(outputFile, 'w')
+    outputFile = open(outputFile, 'w', encoding='ascii')
     outputFile.write("\n# States: %s Transitions: %s \n" % (len(states), len(transitions)))
     for state in states.keys():
         outputFile.write("S %s = %s\n" % (fn(state), states[state]))
@@ -158,7 +158,7 @@ def writeDotFile(states, transitions, outputFile):
     """Writes out a graph-viz file describing the graph.
     """
     stateList = list(states.keys())
-    outputFile = open(outputFile, 'w')
+    outputFile = open(outputFile, 'w', encoding='ascii')
     outputFile.write("graph G {\n")
     outputFile.write("overlap=false\n")
     for state in states:
@@ -194,9 +194,9 @@ def composeInflatedTransducer(branchTransducerX, branchTransducerZ, rootTransduc
         i = None
         for state in transducer.getStateNames():
             if transducer.getStateType(state) == START:
-                assert i == None
+                assert i is None
                 i = state
-        assert i != None
+        assert i is not None
         return i
     
     #Get start states for each branche's transducer.
@@ -345,7 +345,7 @@ def compactModel(states, transitions, collapseCoefficient):
             outTrans = [ i for i in transitions if i[0] == state ]
             if len(inTrans) > 0 and len(outTrans) > 0 and \
             (len(inTrans)*len(outTrans) <= collapseCoefficient + len(inTrans)+len(outTrans)):
-                #print "removing state", state
+                #print("removing state", state)
                 for inT in inTrans:
                     for outT in outTrans:
                         i, j = inT

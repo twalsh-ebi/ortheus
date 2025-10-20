@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -116,22 +116,22 @@ def main():
     i = loggerIndices
     removeReservedIndices(i, alignerArgs)
     if len(sys.argv) < 3:
-        print "Ortheus.py [MODIFIER_ARGUMENTS]"
-        print "Version: ", VERSION_NO
-        print "A top level script for running Ortheus and Pecan to produce substitution and indel aware reconstructed chunks of genome"
-        print "If you would like to contribute to this program's development please contact me at bjp (AT) ebi (DOT) ac (DOT) uk "
-        print "Arguments:"
+        print("Ortheus.py [MODIFIER_ARGUMENTS]")
+        print("Version: ", VERSION_NO)
+        print("A top level script for running Ortheus and Pecan to produce substitution and indel aware reconstructed chunks of genome")
+        print("If you would like to contribute to this program's development please contact me at bjp (AT) ebi (DOT) ac (DOT) uk ")
+        print("Arguments:")
         i = printFirstMods(alignerArgs, i)
         i = printMods(alignerArgs, i)
         i = printModsStitcher(alignerArgs, i)
         i = printModsNester(alignerArgs, i)
         i = printEstimateTreeMods(alignerArgs, i)
-        print "-------------Ortheus help string as follows (Changing these arguments may break the script)-------------"
+        print("-------------Ortheus help string as follows (Changing these arguments may break the script)-------------")
         os.system("ortheus_core")
-        print "-------------End Ortheus help string-------------"
-        print "-------------Pecan help string as follows (Changing these arguments may break the script)-------------"
+        print("-------------End Ortheus help string-------------")
+        print("-------------Pecan help string as follows (Changing these arguments may break the script)-------------")
         os.system("%s bp.pecan.Pecan -help" % (alignerArgs.JAVA_PREFIX,))
-        print "-------------End Pecan help string-------------"
+        print("-------------End Pecan help string-------------")
         sys.exit(0)
         
     mods = sys.argv[1:]
@@ -153,7 +153,7 @@ def main():
         os.remove(alignerArgs.OUTPUT_SCORE_FILE)
     except OSError:
         pass
-    if alignerArgs.NEWICK_TREE_STRING != None:
+    if alignerArgs.NEWICK_TREE_STRING is not None:
         binaryTree = newickTreeParser(alignerArgs.NEWICK_TREE_STRING)  
         logger.info("Newick tree read : %s " % printBinaryTree(binaryTree, True))
     else:
@@ -163,7 +163,7 @@ def main():
     if alignerArgs.MAKE_FINAL_ALIGNMENT:
         nestAlign(binaryTree, alignerArgs.SEQUENCE_FILES, alignerArgs.OUTPUT_FILE, alignerArgs.OUTPUT_SCORE_FILE, alignerArgs)        
     #logger.info("Finished, total time taken : %s (seconds)" % (time.time()-startTime))
-    print "total_time %s " % (time.time()-startTime)
+    print("total_time %s " % (time.time()-startTime))
 
 def _test():
     import doctest      

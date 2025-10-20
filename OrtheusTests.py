@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -50,7 +50,7 @@ class TestCase(unittest.TestCase):
             outputFile = outputPath + "/outputENm001.mfa"
             command = "Ortheus.py -e %s -d '%s' -f %s -j -a -b" % \
             (" ".join(seqFiles), treeString, outputFile)
-            print "running command", command
+            print("running command", command)
             system(command)
         
     def testSimulation(self):
@@ -63,7 +63,7 @@ class TestCase(unittest.TestCase):
             outputFile = outputPath + "/outputJob1.mfa"
             command = "Ortheus.py -e %s -d '%s' -f %s -j -a -b" % \
             (" ".join(seqFiles), treeString, outputFile)
-            print "running command", command
+            print("running command", command)
             system(command)
             
     def testAndyYatesFirstExample(self):
@@ -78,7 +78,7 @@ class TestCase(unittest.TestCase):
             -A 1054 1051 1054 1054 1053 1012 1054 1054 1053 1054 1051 1054 1051 1051 1053 1051 1051 1012 1051 1054 1012 1054 1053 1051 1053 \
             1054 1054 1051 1012 1012 1054 1053 1053 1012 1054 1051 -f %s/output.16163.mfa -g %s/output.16163.tree-a -k "# -A" -m "java -Xmx1800m -Xms1800m" -a -b' % \
             (seqs, filePath, filePath)
-            print "running command", command
+            print("running command", command)
             system(command)
         
     def testRandom(self):
@@ -89,11 +89,11 @@ class TestCase(unittest.TestCase):
         
         MAX_SEQS = 20
         
-        for i in xrange(MAX_SEQS):
+        for i in range(MAX_SEQS):
             self.tempFiles.append(getTempFile())
         
-        for test in xrange(0, self.testNo):
-            print "test no : %i " % test
+        for test in range(0, self.testNo):
+            print("test no : %i " % test)
             #seqNo
             binaryTree = randomTree()
             middleSeq = getRandomSequence(250)[1]
@@ -102,27 +102,27 @@ class TestCase(unittest.TestCase):
            
             if len(seqs) <= MAX_SEQS and len(seqs) > 2:
                 seqFiles = []
-                for i in xrange(0, len(seqs)):
+                for i in range(0, len(seqs)):
                     seqFiles.append(self.tempFiles[1+i])
-                    fileHandle = open(seqFiles[i], 'w')
+                    fileHandle = open(seqFiles[i], 'w', encoding='ascii')
                     fastaWrite(fileHandle, "%i" % i, seqs[i])
                     fileHandle.close()
-                print "Have seq files ", seqFiles
+                print("Have seq files ", seqFiles)
             
                 treeString = printBinaryTree(binaryTree, True)
-                print "For tree ", treeString
+                print("For tree ", treeString)
                 
                 #align seqs and check no failure
                 command = "ortheus_core -a %s -b '%s' -d %s -e" % (" ".join(seqFiles), treeString, outputFile)
-                print "command to call", command
+                print("command to call", command)
                 system(command)
                 
                 #check alignment is complete
                 alignment = [ i[:] for i in fastaAlignmentRead(outputFile) ]
-                #print "alignment", alignment
+                #print("alignment", alignment)
                 checkAlignment(alignment, seqs)
                 
-                print "test no is finished : %i " % test
+                print("test no is finished : %i " % test)
 
 def randomTree():
     leafNo = [-1]
@@ -145,11 +145,11 @@ def getTreeSeqs(binaryTree, seq, l):
 def checkAlignment(align, seqs):
     i = [0]*len(seqs)
     for j in align:
-        for k in xrange(0, len(seqs)):
+        for k in range(0, len(seqs)):
             if j[k*2] != '-':
                 assert j[k*2] == seqs[k][i[k]]
                 i[k] += 1
-    for j in xrange(0, len(seqs)):
+    for j in range(0, len(seqs)):
         assert i[j] == len(seqs[j])
 
 def main():

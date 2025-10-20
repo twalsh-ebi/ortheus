@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -93,7 +93,7 @@ def getNextAlignmentChunk(previousAlignment, alignment, size, seqNo, labels):
     outputs fragment of multiple alignment, and individual sequence files
     """
     seqFiles, seqIterators = getOpenSeqFiles(seqNo, getTempFile)
-    for seq in xrange(0, seqNo):
+    for seq in range(0, seqNo):
         seqIterators[seq].write(">\n")
     alignmentFiles, alignmentIterators = getOpenSeqFiles(seqNo, getTempFile)
     columnCount = 0
@@ -103,7 +103,7 @@ def getNextAlignmentChunk(previousAlignment, alignment, size, seqNo, labels):
         assert len(column) != ['-']*seqNo
         if columnCount >= size:
             break
-        for seq in xrange(0, seqNo):
+        for seq in range(0, seqNo):
             residue = column[seq]
             alignmentIterators[seq].write(residue)
             if column[seq] != '-':
@@ -111,13 +111,13 @@ def getNextAlignmentChunk(previousAlignment, alignment, size, seqNo, labels):
         columnCount += 1
     else:
         for column in alignment:
-            assert column != None
+            assert column is not None
             assert len(column) == seqNo
             assert len(column) != ['-']*seqNo
             previousAlignment.append(column[:])
             if columnCount >= size:
                 break
-            for seq in xrange(0, seqNo):
+            for seq in range(0, seqNo):
                 residue = column[seq]
                 alignmentIterators[seq].write(residue)
                 if column[seq] != '-':
@@ -140,19 +140,19 @@ def removeFromLeft(completedAlignment, alignment, nodeNo, seqNo):
     indices = [0]*seqNo
     for column in completedAlignment:
         assert len(column) == nodeNo
-        for i in xrange(0, seqNo):
+        for i in range(0, seqNo):
             if column[i*2] != '-':
                 indices[i] += 1
     #logger.debug("Indices of sequences aligned : %s ", " ".join([ str(i) for i in indices ]))
     if indices == [0]*seqNo:
-        print "nnnnnnnoooooo"
+        print("nnnnnnnoooooo")
         sys.exit(1)
     l = []
-    for i in xrange(0, len(alignment)):
+    for i in range(0, len(alignment)):
         column = alignment[i]
         assert len(column) == seqNo
         gapCount = 0
-        for j in xrange(0, seqNo):
+        for j in range(0, seqNo):
             if column[j] != '-' :
                 if indices[j] > 0:
                     gapCount += 1
@@ -167,15 +167,15 @@ def removeFromLeft(completedAlignment, alignment, nodeNo, seqNo):
 def appendToAlignment(alignmentIter, outputIter, seqNo):
     for column in alignmentIter:
         assert len(column) == seqNo
-        for seq in xrange(0, seqNo):
+        for seq in range(0, seqNo):
             outputIter[seq].write(column[seq])
             
 def appendScore(scoreFile, previousScoreFile):
-    i = open(scoreFile, 'r')
+    i = open(scoreFile, 'r', encoding='ascii')
     j = float(i.readline())
     i.close()
     try:
-        i = open(previousScoreFile, 'r')
+        i = open(previousScoreFile, 'r', encoding='ascii')
         line = i.readline()
         if line != '':
             k = float(line)
@@ -184,7 +184,7 @@ def appendScore(scoreFile, previousScoreFile):
         i.close()
     except IOError:
         k = 0.0
-    i = open(previousScoreFile, 'w')
+    i = open(previousScoreFile, 'w', encoding='ascii')
     i.write("%f\n" % (j + k))
     i.close()
     
@@ -203,7 +203,7 @@ def makePecanAlignment(inputSeqFiles, treeString, alignmentFile, alignerArgs):
     command = "%s %s -F %s -E '%s' -G %s %s " % (alignerArgs.JAVA_PREFIX, alignerArgs.ALIGNER_PREFIX, " ".join(inputSeqFiles), treeString, alignmentFile, alignmentArgs)
     logger.info("Calling Pecan with : %s", command)
     if os.system(command):
-        print "Something went wrong calling aligner, so I've got to go"
+        print("Something went wrong calling aligner, so I've got to go")
         sys.exit(1)
     logger.info("Completed alignment in : %s (seconds)" % (time.time()-pecanTime))
 
@@ -224,7 +224,7 @@ def stitchReconstruct(seqNo, inputSeqFiles, treeString, outputFile, outputScoreF
     binaryTree_depthFirstNumbers(binaryTree)
     logger.info("Newick tree read : %s " % printBinaryTree(binaryTree, True))
     labels = binaryTree_nodeNames(binaryTree)
-    leafLabels = [ labels[i] for i in xrange(0, len(labels)) if (i%2) == 0]
+    leafLabels = [ labels[i] for i in range(0, len(labels)) if (i%2) == 0]
     #load alignment iterator
     alignmentReader = multiFastaRead(inputAlignmentFile, lambda x : x)
     #number of sequences, including ancestors
@@ -239,7 +239,7 @@ def stitchReconstruct(seqNo, inputSeqFiles, treeString, outputFile, outputScoreF
     loopOptions = " "  
     logger.info("Starting main loop")
     characterFrequenciesString = " ".join([ str(i) for i in alignerArgs.EXPECTED_CHARACTER_FREQUENCIES ])
-    while alignmentSeqs != None:
+    while alignmentSeqs is not None:
         if(end):
             viterbiAlignmentColumnGap = 0
         tempAncestorFile = getTempFile()

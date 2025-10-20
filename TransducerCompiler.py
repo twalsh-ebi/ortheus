@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -67,7 +67,7 @@ class Model:
         return self.inverseMatrix[state].copy()
         
     def getStateNames(self, stateType=None):
-        if stateType == None:
+        if stateType is None:
             return list(self.statesList)
         return [ i for i in self.statesList if self.getStateType(i) == stateType ]
     
@@ -86,7 +86,7 @@ class Model:
         function.
         """
         l = [0]*len(self.statesList)
-        for i in xrange(len(self.statesList)+10):
+        for i in range(len(self.statesList)+10):
             for stateTo in self.statesList:
                 toType = self.getStateType(stateTo)
                 toIndex = self.statesList.index(stateTo)
@@ -98,9 +98,9 @@ class Model:
                             l[toIndex] = l[fromIndex]+1
                         elif toType == DELETE_XZ and fromType != SILENT and \
                                                      fromType != DELETE_XZ:
-                            #print "better thab", stateFrom, stateTo
+                            #print("better thab", stateFrom, stateTo)
                             l[toIndex] = l[fromIndex]+1
-        l = [ (l[i], self.statesList[i]) for i in xrange(len(l)) ]
+        l = [ (l[i], self.statesList[i]) for i in range(len(l)) ]
         l.sort()
         self.statesList = [ i[1] for i in l ]
         
@@ -153,7 +153,7 @@ def parseFile(inputFile):
     silentModel = Model()
     subModel = None
         
-    inputFile = open(inputFile, 'r')
+    inputFile = open(inputFile, 'r', encoding='ascii')
     line = getNextNonCommentLine(inputFile)
     while line != '':
         if line[0] == 'P' or line[0] == 'C' or line[0] == 'O' or line[0] == 'B':
@@ -236,7 +236,7 @@ class HKYSubModel:
 def writeHModel(outputFile, primaryParameterList, parameterList, cParameters, forwardModel, silentModel, subModel):
     """This function writes the header file.
     """
-    outputFile = open(outputFile, 'w')
+    outputFile = open(outputFile, 'w', encoding='ascii')
     
     #Write header lines
     outputFile.write("#ifndef XYZMODELC_H_\n")
@@ -260,14 +260,14 @@ def writeHModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     for toState in forwardModel.getStateNames():
         i = forwardModel.getTransitionsTo(toState)
         for fromState in i.keys():
-            #print "This is", fromState, toState, i[fromState]
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\tfloat ft%s_%s;\n" % (fromState, toState))
             outputFile.write("\tfloat tbt%s_%s;\n" % (fromState, toState))
     outputFile.write("\n")
     
     for toState in silentModel.getStateNames():
         for fromState in silentModel.getStateNames():
-            #print "This is", fromState, toState, i[fromState]
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\tfloat lt%s_%s;\n" % (fromState, toState))
     
     outputFile.write("};\n")
@@ -283,7 +283,7 @@ def writeHModel(outputFile, primaryParameterList, parameterList, cParameters, fo
 def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, forwardModel, silentModel, subModel):
     """This function writes the .c file.
     """
-    outputFile = open(outputFile, 'w')
+    outputFile = open(outputFile, 'w', encoding='ascii')
     
     #Write header lines
     outputFile.write("#include <stdio.h>\n")
@@ -359,7 +359,7 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     for toState in forwardModel.getStateNames():
         i = forwardModel.getTransitionsTo(toState)
         for fromState in i.keys():
-            #print "This is", fromState, toState, i[fromState]
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\ttemp->ft%s_%s = LOG(%s);\n" % (fromState, toState, i[fromState]))
             outputFile.write("\ttemp->tbt%s_%s = LOG(%s);\n" % (fromState, toState, replaceCParameters(i[fromState], cParameters)))
             outputFile.write('\tst_logInfo("From state %s, To state %s, Forward Parameter %%f Traceback parameter %%f \\n", temp->ft%s_%s, temp->tbt%s_%s);\n' % (fromState, toState, fromState, toState, fromState, toState))
@@ -370,7 +370,7 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     for toState in silentModel.getStateNames():
         i = silentModel.getTransitionsTo(toState)
         for fromState in i.keys():
-            #print "This is", fromState, toState, i[fromState]
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\tfloat tlt%s_%s = %s;\n" % (fromState, toState, i[fromState]))
     outputFile.write("\t float fA[STATE_NO];\n") 
     outputFile.write("\t float fA1[STATE_NO];\n") 
