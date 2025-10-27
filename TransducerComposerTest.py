@@ -10,12 +10,12 @@ import os
 from TransducerComposer import parseInputTransducerFile
 from TransducerComposer import mainScript
 
-from ortheus.common import ortheusRootPath
-
 class TestCase(unittest.TestCase):
     
     def setUp(self):
-        self.rootPath = os.path.join(ortheusRootPath(), "models")
+        test_script_file_path = os.path.realpath(__file__)
+        test_script_dir_path = os.path.dirname(test_script_file_path)
+        self.rootPath = os.path.join(test_script_dir_path, "models")
         unittest.TestCase.setUp(self)
     
     def tearDown(self):
