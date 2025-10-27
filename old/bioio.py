@@ -299,7 +299,7 @@ def newickTreeParser(newickTree, defaultDistance=DEFAULT_DISTANCE, \
     newickTree = newickTree.replace(";", "")
     newickTree = newickTree.replace(",", " , ")
     
-    newickTree = re.compile("[\\s]*").split(newickTree)
+    newickTree = re.compile("[\\s]+").split(newickTree)
     while "" in newickTree:
         newickTree.remove("")
     def fn(newickTree, i):

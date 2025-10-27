@@ -94,17 +94,17 @@ class Transducer:
 ########################################################
 
 def parseStateLine(line):
-    name = re.compile("\\(name ([^)]*)\\)").search(line).group(1)
-    type = re.compile("\\(type ([^)]*)\\)").search(line).group(1)
+    name = re.compile("\\(name ([^)]+)\\)").search(line).group(1)
+    type = re.compile("\\(type ([^)]+)\\)").search(line).group(1)
     hash = { 'start':START, 'end':END, 'wait':SILENT, 
              'silent':SILENT, 'insert':INSERT, 'match':MATCH,
              'delete':DELETE }
     return name, hash[type]
 
 def parseTransitionLine(line):
-    fState = re.compile("\\(from ([^)]*)\\)").search(line).group(1)
-    tState = re.compile("\\(to ([^)]*)\\)").search(line).group(1)
-    s = re.compile("\\(label ([^)]*)\\)").search(line)
+    fState = re.compile("\\(from ([^)]+)\\)").search(line).group(1)
+    tState = re.compile("\\(to ([^)]+)\\)").search(line).group(1)
+    s = re.compile("\\(label ([^)]+)\\)").search(line)
     value = []
     if s is not None:
         value = [ s.group(1) ]
