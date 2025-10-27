@@ -573,8 +573,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Arguments:\n");
         fprintf(stderr, "\t-a [FILE]xN input sequence files (-a or -F required)\n");
         fprintf(stderr, "\t-F [FILE] file containing all the input sequence files (-a or -F required)\n");
-        fprintf(stderr, "\t-b [STRING] newick tree string (-b or -B is essential, parser is pretty tolerant, but maybe dangerous)\n");
-        fprintf(stderr, "\t-B [FILE] newick tree file (-b or -B is essential, parser is pretty tolerant, but maybe dangerous)\n");
+        fprintf(stderr, "\t-b [STRING] newick tree string (-b or -T is essential, parser is pretty tolerant, but maybe dangerous)\n");
+        fprintf(stderr, "\t-T [FILE] newick tree file (-b or -T is essential, parser is pretty tolerant, but maybe dangerous)\n");
         fprintf(stderr, "\t-c [FILE] constraining alignment (if not present, assumes not constraints)\n");
         fprintf(stderr, "\t-d [FILE] output alignment file (if not present, writes to standard out)\n");
         fprintf(stderr, "\t-e set logging level to DEBUG (lowest level stuff, default is OFF)\n");
@@ -635,7 +635,7 @@ int main(int argc, char *argv[]) {
             case 'b':
                 newickTreeString = argv[++i];
                 break;
-            case 'B':
+            case 'T':
                 newickTreeString = readNewickTreeString(argv[++i]);
                 break;
             case 'c':
@@ -701,7 +701,7 @@ int main(int argc, char *argv[]) {
 
     //tree stuff
     if (! newickTreeString) {
-        st_logInfo("Missing required argument '-b' or '-B'\n");
+        st_logInfo("Missing required argument '-b' or '-T'\n");
         exit(1);
     }
     st_logInfo("Newick-Tree : %s\n", newickTreeString);
