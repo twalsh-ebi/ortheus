@@ -571,8 +571,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Version: %s\n", VERSION);
         fprintf(stderr, "A program for the inferral of ancestor sequences\n");
         fprintf(stderr, "Arguments:\n");
-        fprintf(stderr, "\t-a [FILE]xN input sequence files (-a or -A required)\n");
-        fprintf(stderr, "\t-A [FILE] file containing all the input sequence files (-a or -A required)\n");
+        fprintf(stderr, "\t-a [FILE]xN input sequence files (-a or -F required)\n");
+        fprintf(stderr, "\t-F [FILE] file containing all the input sequence files (-a or -F required)\n");
         fprintf(stderr, "\t-b [STRING] newick tree string (-b or -B is essential, parser is pretty tolerant, but maybe dangerous)\n");
         fprintf(stderr, "\t-B [FILE] newick tree file (-b or -B is essential, parser is pretty tolerant, but maybe dangerous)\n");
         fprintf(stderr, "\t-c [FILE] constraining alignment (if not present, assumes not constraints)\n");
@@ -616,7 +616,7 @@ int main(int argc, char *argv[]) {
                 }
                 i--;
                 break;
-            case 'A':
+            case 'F':
                 inputSequences = constructEmptyList(0, free);
                 stream = fopen(argv[++i], "r");
                 if (stream == NULL) {
@@ -723,7 +723,7 @@ int main(int argc, char *argv[]) {
     if (inputSequences) {
         seqs = parseSequences(inputSequences, &seqNo, &seqLengths);
     } else {
-        st_logInfo("Missing required argument '-a' or '-A'\n");
+        st_logInfo("Missing required argument '-a' or '-F'\n");
         exit(1);
     }
     combinedTransitionModels = st_malloc(sizeof(void *)*nodeNumber);
