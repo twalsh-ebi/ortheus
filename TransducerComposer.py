@@ -84,7 +84,7 @@ class Transducer:
         print("State names", " ".join(self.getStateNames()))
         for fS in self.getStateNames():
             i = self.getTransitionsFrom(fS)
-            for tS in i.keys():
+            for tS in sorted(i.keys()):
                 print("From state %s, to state %s, value %s" % (fS, tS, i[tS]))
                 
 ########################################################
@@ -148,23 +148,23 @@ def writeModel(states, transitions, outputFile):
         return stateName.replace('/', '')
     outputFile = open(outputFile, 'w', encoding='ascii')
     outputFile.write("\n# States: %s Transitions: %s \n" % (len(states), len(transitions)))
-    for state in states.keys():
+    for state in sorted(states.keys()):
         outputFile.write("S %s = %s\n" % (fn(state), states[state]))
-    for fS, tS in transitions.keys():
+    for fS, tS in sorted(transitions.keys()):
         outputFile.write("T %s --> %s = %s\n" % (fn(fS), fn(tS), " * ".join(transitions[(fS, tS)])))
     outputFile.close()
     
 def writeDotFile(states, transitions, outputFile):
     """Writes out a graph-viz file describing the graph.
     """
-    stateList = list(states.keys())
+    stateList = sorted(states.keys())
     outputFile = open(outputFile, 'w', encoding='ascii')
     outputFile.write("graph G {\n")
     outputFile.write("overlap=false\n")
-    for state in states:
+    for state in sorted(states):
         outputFile.write("node[width=0.3,height=0.3,shape=box,style=filled,color=red,fontsize=14];\n")
         outputFile.write('n%in [label="%s"];\n' % (stateList.index(state), state))
-    for transition in transitions:
+    for transition in sorted(transitions):
         i, j = transition
         outputFile.write("edge[color=green,len=0.6,weight=100,dir=forward];\n")
         outputFile.write('n%in -- n%in [label="%s"];\n' % (stateList.index(i), stateList.index(j), "*".join(transitions[transition])))
@@ -339,7 +339,7 @@ def compactModel(states, transitions, collapseCoefficient):
     to make the graph more compact.
     """
     #return states, transitions   
-    for state in states.keys():
+    for state in sorted(states.keys()):
         if states[state] == SILENT:
             inTrans = [ i for i in transitions if i[1] == state ]
             outTrans = [ i for i in transitions if i[0] == state ]
