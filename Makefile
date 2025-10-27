@@ -1,7 +1,7 @@
 rootPath = ./
 include ./include.mk
 
-all : ${binPath}/ortheus_core ${binPath}/Ortheus.py
+all : ${binPath}/ortheus_core
 
 #These are parameters for composing/compiling the graph
 
@@ -18,24 +18,21 @@ model = ${modelPath}/affineModel.sxpr
 paramModel = ${modelPath}/affineModel.param
  
 clean :
-	rm -f ${binPath}/ortheus_core model.otra xyzModelC.c xyzModelC.h ${binPath}/Ortheus.py
+	rm -f ${binPath}/ortheus_core model.otra xyzModelC.c xyzModelC.h
 	cd submodules/sonLib && ${MAKE} cP.clean
 
-${binPath}/Ortheus.py : Ortheus.py old/Nester.py old/Stitcher.py old/EstimateTree.py old/bioio.py old/tree.py old/misc.py
-	cp Ortheus.py ${binPath}/Ortheus.py
-	chmod +x ${binPath}/Ortheus.py
-
 ${binPath}/ortheus_core : *.c *.h xyzModelC.c xyzModelC.h ${basicLibsDependencies}
+	mkdir -p ${binPath}
 	${cxx} ${cflags} -I ${libPath} -o ${binPath}/ortheus_core *.c ${basicLibs} -lm
 
 # stdin from </dev/null works around stray stdin read on OS/X that hangs backgroud
 # jobs
 xyzModelC.c xyzModelC.h : ${model} ${paramModel} TransducerComposer.py TransducerCompiler.py
 	rm -f model.otra xyzModelC.c xyzModelC.h ${modelPath}/model.dot ${modelPath}/ortheusmodel.pdf
-	python3 TransducerComposer.py ${model} temp.otra ${modelPath}/model.dot ${collapseCoefficient} </dev/null
+	${PYTHON} TransducerComposer.py ${model} temp.otra ${modelPath}/model.dot ${collapseCoefficient} </dev/null
 	cat  ${paramModel} temp.otra > model.otra
 	rm temp.otra
-	python3  TransducerCompiler.py model.otra xyzModelC.c xyzModelC.h </dev/null
+	${PYTHON} TransducerCompiler.py model.otra xyzModelC.c xyzModelC.h </dev/null
 	#Use this line if you want the pretty picture
 	#${makeGraph} ${modelPath}/model.dot -Tpdf > ${modelPath}/model.pdf
 
@@ -44,4 +41,4 @@ ${basicLibsDependencies} :
   
 test :
 	#Running python allTests.py
-	PYTHONPATH=.. PATH=../../bin:$$PATH python3 allTests.py --testLength=SHORT --logDebug
+	${PYTHON} allTests.py --testLength=SHORT --logDebug

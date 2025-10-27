@@ -7,6 +7,7 @@
 """Tests ortheus_core and the old Ortheus python scripts.
 """
 
+from importlib.resources import files
 import os
 import random
 import sys
@@ -113,7 +114,8 @@ class TestCase(unittest.TestCase):
                 print("For tree ", treeString)
                 
                 #align seqs and check no failure
-                command = "ortheus_core -a %s -b '%s' -d %s -e" % (" ".join(seqFiles), treeString, outputFile)
+                ortheusCore = files("ortheus.bin").joinpath("ortheus_core")
+                command = "%s -a %s -b '%s' -d %s -e" % (ortheusCore, " ".join(seqFiles), treeString, outputFile)
                 print("command to call", command)
                 system(command)
                 

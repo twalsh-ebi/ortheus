@@ -5,6 +5,7 @@
 #Released under the MIT license, see LICENSE.txt
 
 import sys
+from importlib.resources import files
 import os
 import re
 import time
@@ -127,12 +128,13 @@ def main():
         i = printModsNester(alignerArgs, i)
         i = printEstimateTreeMods(alignerArgs, i)
         print("-------------Ortheus help string as follows (Changing these arguments may break the script)-------------")
-        os.system("ortheus_core")
+        ortheusCore = str(files("ortheus.bin").joinpath("ortheus_core"))
+        os.system(ortheusCore)
         print("-------------End Ortheus help string-------------")
         print("-------------Pecan help string as follows (Changing these arguments may break the script)-------------")
         os.system("%s bp.pecan.Pecan -help" % (alignerArgs.JAVA_PREFIX,))
         print("-------------End Pecan help string-------------")
-        sys.exit(0)
+        return(0)
         
     mods = sys.argv[1:]
     l = []
@@ -143,7 +145,7 @@ def main():
     i = parseEstimateTreeMods(mods, alignerArgs, i, l)
     if len(l) != 0:
         logger.info("Ooops, remaining arguments %s ", " ".join(l))
-        assert False  
+        return(1)
     logger.info("Arguments received : %s " % " ".join(sys.argv))
     logger.info("Sequence files : %s " % " ".join(alignerArgs.SEQUENCE_FILES))
     if alignerArgs.EMPIRICALLY_ESTIMATE_CHARACTER_FREQUENCIES:
@@ -171,4 +173,4 @@ def _test():
 
 if __name__ == '__main__':
     _test()
-    main()
+    sys.exit(main())

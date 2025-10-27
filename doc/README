@@ -13,7 +13,7 @@ The input is generally a set of sequences (in Fasta format) (and optionally a tr
 Newick format), while the output is a multi-fasta alignment containing both the leaves 
 and ancestor sequences, and a tree (if none was given initially).
 
-To run Ortheus type python Ortheus.py [arguments] (after following the installation instructions, see the readme.md in the top level directory). To see
+To run Ortheus type 'Ortheus.py [arguments]' (after following the installation instructions, see the readme.md in the top level directory). To see
 the list of all possible arguments simply omit all arguments. The only mandatory
 arguments are the list of sequence files (which must number greater than or equal
 to two). If a tree is not specified then Ortheus will estimate a tree, using
@@ -22,9 +22,9 @@ neighbor joining, and place that estimated tree in a file. See 'ON TREE ESTIMATI
 INSTALLATION REQUIREMENTS : 
 
 Ortheus requires working installations of Java (v1.5 and higher), 
-Python (v2.3 and higher), and a C compiler (GCC is assumed by default, to change
-it edit the make file). Ortheus works with Pecan (a version of which is hidden
-in the distribution) and therefore requires the installation of Exonerate 
+Python (v3.10 and higher), and a C compiler (GCC is assumed by default, to change
+it edit the make file). Ortheus works with Pecan
+and therefore requires the installation of Exonerate
 (tested with version 1.0, but it may work with newer versions also, please let
 me know). 
 
@@ -45,7 +45,7 @@ the output tree (with branch lengths) would be in a file called 'output.newick'.
 
 Another example including a tree..
 
-python Ortheus.py -d '(0:0.1, 1:0.1);' -e seq1.fa seq2.fa
+Ortheus.py -d '(0:0.1, 1:0.1);' -e seq1.fa seq2.fa
 
 ON TREE ESTIMATION
 
@@ -61,7 +61,7 @@ implies the fewest number of duplications (first sort term) and losses (second s
 
 Example... 
 
-Ortheus.py -b -e CAT_5k CHIMP_5k BABOON_5k RAT_5k -A cat chimp baboon rat -z '((((human, chimp), baboon),(mouse,rat)),(cat,dog));' 
+Ortheus.py -b -e CAT_5k CHIMP_5k BABOON_5k RAT_5k -A cat chimp baboon rat -z '((((human, chimp), baboon),(mouse,rat)),(cat,dog));'
 
 The -A argument tells Ortheus what species each sequence comes from, and matches members of the species-tree leaf node set. 
 This avoids the problem of having to match up fasta fields or sequence names with the labels in the species tree.

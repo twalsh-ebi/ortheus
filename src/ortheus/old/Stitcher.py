@@ -9,6 +9,7 @@ Runs Pecan, then Ortheus upon output, and creates ancestor sequences
 """
 
 import sys
+from importlib.resources import files
 import os
 import os.path
 import time
@@ -41,7 +42,7 @@ def addDefaultStitcherArgs(alignerArgs):
     alignerArgs.JAVA_PREFIX = "java -server "
     alignerArgs.ALIGNER_PREFIX =  " bp.pecan.Pecan "
     #alignerArgs.ALIGNER_PREFIX =  " bp.pecan.Pecan"
-    alignerArgs.RECONSTRUCTION_PREFIX = "ortheus_core"
+    alignerArgs.RECONSTRUCTION_PREFIX = files("ortheus.bin").joinpath("ortheus_core")
     alignerArgs.ALIGNMENT_ARGS = " " #-X -d -q -r 1.0 "
     alignerArgs.RECONSTRUCTION_ARGS = " "
     alignerArgs.ALIGNMENT_ARGS_FAST = " " #-X -d -q -r 1.0 "
