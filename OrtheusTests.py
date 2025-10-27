@@ -40,7 +40,7 @@ class TestCase(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         
     def testENm001(self):
-        if TestStatus.getTestStatus() == TestStatus.TEST_VERY_LONG:
+        if TestStatus.getTestLength() == TestStatus.TEST_VERY_LONG:
             encodePath = TestStatus.getPathToDataSets() + "/MAY-2005/ENm001"
             outputPath = TestStatus.getPathToDataSets() + "/ortheus/encodeTest"
             #treeString = '(((((((((((((human:0.006969,chimp:0.009727):0.025291,((baboon:0.008968):0.011019):0.024581):0.023649):0.066673):0.018405,((rat:0.081244,mouse:0.072818):0.238435):0.021892):0.02326,(((cow:0.164728,(cat:0.109852,dog:0.107805):0.049576):0.004663):0.010883):0.033242):0.028346):0.016015):0.226853):0.063898):0.126639):0.119814):0.16696);'
@@ -54,7 +54,7 @@ class TestCase(unittest.TestCase):
             system(command)
         
     def testSimulation(self):
-        if TestStatus.getTestStatus() == TestStatus.TEST_LONG:
+        if TestStatus.getTestLength() == TestStatus.TEST_LONG:
             blanchettePath = TestStatus.getPathToDataSets() + "/blanchettesSimulation/00.job"
             outputPath = TestStatus.getPathToDataSets() + "/ortheus/blanchettesSimulationTest"
             treeString = '(((((((((((((human:0.006969,chimp:0.009727):0.025291,((baboon:0.008968):0.011019):0.024581):0.023649):0.066673):0.018405,((rat:0.081244,mouse:0.072818):0.238435):0.021892):0.02326,(((cow:0.164728,(cat:0.109852,dog:0.107805):0.049576):0.004663):0.010883):0.033242):0.028346):0.016015):0.226853):0.063898):0.126639):0.119814):0.16696);'
@@ -67,7 +67,7 @@ class TestCase(unittest.TestCase):
             system(command)
             
     def testAndyYatesFirstExample(self):
-        if TestStatus.getTestStatus() == TestStatus.TEST_LONG:
+        if TestStatus.getTestLength() == TestStatus.TEST_LONG:
             filePath = TestStatus.getPathToDataSets() + "/ortheus/andyYatesExample1"
             seqs = "seq1.fa seq2.fa seq3.fa seq4.fa seq5.fa seq6.fa seq7.fa seq8.fa seq9.fa seq10.fa seq11.fa \
             seq12.fa seq13.fa seq14.fa seq15.fa seq16.fa seq17.fa seq18.fa seq19.fa seq20.fa seq21.fa seq22.fa seq23.fa seq24.fa seq25.fa seq26.fa \

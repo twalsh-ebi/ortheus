@@ -19,6 +19,7 @@ paramModel = ${modelPath}/affineModel.param
  
 clean :
 	rm -f ${binPath}/ortheus_core model.otra xyzModelC.c xyzModelC.h ${binPath}/Ortheus.py
+	cd submodules/sonLib && ${MAKE} cP.clean
 
 ${binPath}/Ortheus.py : Ortheus.py old/Nester.py old/Stitcher.py old/EstimateTree.py old/bioio.py old/tree.py old/misc.py
 	cp Ortheus.py ${binPath}/Ortheus.py
@@ -37,6 +38,9 @@ xyzModelC.c xyzModelC.h : ${model} ${paramModel} TransducerComposer.py Transduce
 	python3  TransducerCompiler.py model.otra xyzModelC.c xyzModelC.h </dev/null
 	#Use this line if you want the pretty picture
 	#${makeGraph} ${modelPath}/model.dot -Tpdf > ${modelPath}/model.pdf
+
+${basicLibsDependencies} :
+	cd submodules/sonLib && ${MAKE} cP
   
 test :
 	#Running python allTests.py
