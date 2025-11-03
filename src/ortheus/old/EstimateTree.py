@@ -4,6 +4,8 @@
 #
 #Released under the MIT license, see LICENSE.txt
 
+import shlex
+import subprocess
 import sys
 import os
 
@@ -187,14 +189,23 @@ def calculateSemphyTreeEstimate(alignmentFile, treeArgs, seqNo):
     semphyAlignmentFile = formatForSemphy(alignmentFile)
     outputTreeFile = getTempFile()
     characterFrequencies = " --ACGprob=%f,%f,%f" % tuple(treeArgs.EXPECTED_CHARACTER_FREQUENCIES[:-1])
-    command = "%s --treeoutputfile=%s %s %s --sequence=%s " % (treeArgs.SEMPHY_PATH, outputTreeFile, semphyArgs, characterFrequencies, semphyAlignmentFile)
+
+    semphyCmdArgs = [
+        treeArgs.SEMPHY_PATH,
+        f"--treeoutputfile={outputTreeFile}",
+    ] + shlex.split(semphyArgs) + [
+        characterFrequencies,
+        f"--sequence={semphyAlignmentFile}",
+    ]
+
     #if existingTreeFile is not None: #just optimise branch lengths
-    #    command += " --bbl --tree=%s " % existingTreeFile
-    logger.info("Calling Semphy with %s ", command)
-    pipe = os.popen(command)
-    if pipe.close():
-        logger.info("tree building failed, so must exit")
-        sys.exit(1)
+    #    commandArgs.extend(["--bbl", f"--tree={existingTreeFile}"])
+    logger.info("Calling Semphy with %s ", shlex.join(semphyCmdArgs))
+    try:
+        subprocess.run(semphyCmdArgs, stdout=subprocess.DEVNULL, check=True)
+    except subprocess.CalledProcessError as exc:
+        logger.exception("Something went wrong with tree building (return code: %d), so must exit", exc.returncode)
+        sys.exit(exc.returncode)
     fileHandle = open(outputTreeFile, 'r', encoding='ascii')
     treeString = fileHandle.readlines()[0]
     fileHandle.close()

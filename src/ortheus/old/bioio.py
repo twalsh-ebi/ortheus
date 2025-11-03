@@ -9,6 +9,8 @@ import sys
 import os
 import re
 import logging
+import shlex
+import subprocess
 import tempfile
 
 from ortheus.old.tree import BinaryTree
@@ -494,12 +496,30 @@ def runExonerate(querySeqFile, targetSeqFile, path='exonerate', stringOptions=RU
     runs exonerate, with given options, returns a list of cigars
     """
     f = getTempFile("bioio")
-    com = "%s --showcigar true --showvulgar false --showalignment false %s %s %s > %s" % (path, stringOptions, querySeqFile, targetSeqFile, f)
-    print("commmand :", com)
-    exitValue = os.system(com)
-    if exitValue != 0:
-        logger.info("Something went wrong calling Exoncerate : %i ", exitValue)
-        sys.exit(1)
+
+    com = [
+        path,
+        "--showcigar",
+        "true",
+        "--showvulgar",
+        "false",
+        "--showalignment",
+        "false",
+    ] + shlex.split(stringOptions) + [
+        querySeqFile,
+        targetSeqFile,
+    ]
+
+    print("commmand :", shlex.join(com))
+    with open(f, mode="w", encoding="ascii") as temp_file_obj:
+        try:
+            subprocess.run(com, stdout=temp_file_obj, check=True)
+        except subprocess.CalledProcessError as exc:
+            logger.exception(
+                "Something went wrong calling Exonerate (return code: %i)",
+                exc.returncode,
+            )
+            sys.exit(exc.returncode)
     c = parseCigars(f)
     os.remove(f)
     return c

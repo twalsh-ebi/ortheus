@@ -12,6 +12,8 @@ import sys
 from importlib.resources import files
 import os
 import os.path
+import shlex
+import subprocess
 import time
 
 from ortheus.old.bioio import multiFastaRead
@@ -42,7 +44,7 @@ def addDefaultStitcherArgs(alignerArgs):
     alignerArgs.JAVA_PREFIX = "java -server "
     alignerArgs.ALIGNER_PREFIX =  " bp.pecan.Pecan "
     #alignerArgs.ALIGNER_PREFIX =  " bp.pecan.Pecan"
-    alignerArgs.RECONSTRUCTION_PREFIX = files("ortheus.bin").joinpath("ortheus_core")
+    alignerArgs.RECONSTRUCTION_PREFIX = str(files("ortheus.bin").joinpath("ortheus_core"))
     alignerArgs.ALIGNMENT_ARGS = " " #-X -d -q -r 1.0 "
     alignerArgs.RECONSTRUCTION_ARGS = " "
     alignerArgs.ALIGNMENT_ARGS_FAST = " " #-X -d -q -r 1.0 "
@@ -201,11 +203,25 @@ def makePecanAlignment(inputSeqFiles, treeString, alignmentFile, alignerArgs):
     else:
         alignmentArgs = alignerArgs.ALIGNMENT_ARGS
     pecanTime = time.time()
-    command = "%s %s -F %s -E '%s' -G %s %s " % (alignerArgs.JAVA_PREFIX, alignerArgs.ALIGNER_PREFIX, " ".join(inputSeqFiles), treeString, alignmentFile, alignmentArgs)
-    logger.info("Calling Pecan with : %s", command)
-    if os.system(command):
-        print("Something went wrong calling aligner, so I've got to go")
-        sys.exit(1)
+
+    command = shlex.split(alignerArgs.JAVA_PREFIX) + shlex.split(alignerArgs.ALIGNER_PREFIX) + [
+        "-F",
+    ] + list(inputSeqFiles) + [
+        "-E",
+        treeString,
+        "-G",
+        alignmentFile,
+    ] + shlex.split(alignmentArgs)
+
+    logger.info("Calling Pecan with : %s", shlex.join(command))
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as exc:
+        logger.exception(
+            "Something went wrong calling aligner (return code: %d), so I've got to go",
+            exc.returncode,
+        )
+        sys.exit(exc.returncode)
     logger.info("Completed alignment in : %s (seconds)" % (time.time()-pecanTime))
 
 def stitchReconstruct(seqNo, inputSeqFiles, treeString, outputFile, outputScoreFile, inputAlignmentFile, alignerArgs):
@@ -239,30 +255,70 @@ def stitchReconstruct(seqNo, inputSeqFiles, treeString, outputFile, outputScoreF
     tempTreeStatesFile = getTempFile()
     loopOptions = " "  
     logger.info("Starting main loop")
-    characterFrequenciesString = " ".join([ str(i) for i in alignerArgs.EXPECTED_CHARACTER_FREQUENCIES ])
+    characterFrequencies = [ str(i) for i in alignerArgs.EXPECTED_CHARACTER_FREQUENCIES ]
     while alignmentSeqs is not None:
         if(end):
             viterbiAlignmentColumnGap = 0
         tempAncestorFile = getTempFile()
         tempScoreFile = getTempFile()
-        command = "%s -b '%s' -c %s -a %s -u %s -s %s %s %s -d %s -n %s -x %s " % (reconstructionPrefix, treeString, alignmentFile, \
-                                                                       " ".join(alignmentSeqs), tempTreeStatesFile, \
-                                                                       viterbiAlignmentColumnGap, loopOptions, reconstructionArgs, tempAncestorFile, characterFrequenciesString, tempScoreFile)
-        logger.info("Calling Ortheus with : %s", command)
-        exitValue = os.system(command)
-        if exitValue != 0:
-            logger.info("Something went wrong calling Ortheus : %i ", exitValue)
-            #if exitValue != 73:
-            #    logger.info("Unrecognised issue, so am exiting to be cautious")
-            #    sys.exit(1)
+
+        command = [
+            reconstructionPrefix,
+            "-b",
+            treeString,
+            "-c",
+            alignmentFile,
+            "-a",
+        ] + alignmentSeqs + [
+            "-u",
+            tempTreeStatesFile,
+            "-s",
+            str(viterbiAlignmentColumnGap),
+        ] + shlex.split(loopOptions) + shlex.split(reconstructionArgs) + [
+            "-d",
+            tempAncestorFile,
+            "-n",
+        ] + characterFrequencies + [
+            "-x",
+            tempScoreFile,
+        ]
+
+        logger.info("Calling Ortheus with : %s", shlex.join(command))
+        try:
+            subprocess.run(command, check=True)
+        except subprocess.CalledProcessError as exc:
+            logger.info("Something went wrong calling Ortheus : %i ", exc.returncode)
+
             logger.info("Going to retry with caution settings")
-            command = "%s -b '%s' -c %s -a %s -u %s -s %s %s %s -d %s -x %s" % (reconstructionPrefix, treeString, alignmentFile, \
-                                                                       " ".join(alignmentSeqs), tempTreeStatesFile, \
-                                                                       viterbiAlignmentColumnGap, loopOptions, cautiousArgs, tempAncestorFile, tempScoreFile)
-            logger.info("Calling Ortheus with : %s", command)
-            if os.system(command):
-                logger.info("Already tried caution, so have to go")
-                sys.exit(1)
+            command = [
+                reconstructionPrefix,
+                "-b",
+                treeString,
+                "-c",
+                alignmentFile,
+                "-a",
+            ] + alignmentSeqs + [
+                "-u",
+                tempTreeStatesFile,
+                "-s",
+                str(viterbiAlignmentColumnGap),
+            ] + shlex.split(loopOptions) + shlex.split(cautiousArgs) + [
+                "-d",
+                tempAncestorFile,
+                "-x",
+                tempScoreFile,
+            ]
+
+            logger.info("Calling Ortheus with : %s", shlex.join(command))
+            try:
+                subprocess.run(command, check=True)
+            except subprocess.CalledProcessError as exc:
+                logger.exception(
+                    "Something went wrong calling Ortheus (return code: %d), so have to go",
+                    exc.returncode,
+                )
+                sys.exit(exc.returncode)
+
         logger.info("Completed reconstruction of chunk")
         appendScore(tempScoreFile, outputScoreFile)
         os.remove(tempScoreFile)

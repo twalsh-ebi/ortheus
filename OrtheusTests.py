@@ -114,7 +114,7 @@ class TestCase(unittest.TestCase):
                 print("For tree ", treeString)
                 
                 #align seqs and check no failure
-                ortheusCore = files("ortheus.bin").joinpath("ortheus_core")
+                ortheusCore = str(files("ortheus.bin").joinpath("ortheus_core"))
                 command = "%s -a %s -b '%s' -d %s -e" % (ortheusCore, " ".join(seqFiles), treeString, outputFile)
                 print("command to call", command)
                 system(command)

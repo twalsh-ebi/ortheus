@@ -8,6 +8,8 @@ import sys
 from importlib.resources import files
 import os
 import re
+import shlex
+import subprocess
 import time
 
 from ortheus.old.Nester import nestAlign
@@ -129,10 +131,11 @@ def main():
         i = printEstimateTreeMods(alignerArgs, i)
         print("-------------Ortheus help string as follows (Changing these arguments may break the script)-------------")
         ortheusCore = str(files("ortheus.bin").joinpath("ortheus_core"))
-        os.system(ortheusCore)
+        subprocess.run(ortheusCore)
         print("-------------End Ortheus help string-------------")
         print("-------------Pecan help string as follows (Changing these arguments may break the script)-------------")
-        os.system("%s bp.pecan.Pecan -help" % (alignerArgs.JAVA_PREFIX,))
+        pecanCmdArgs = shlex.split(alignerArgs.JAVA_PREFIX) + ["bp.pecan.Pecan", "-help"]
+        subprocess.run(pecanCmdArgs)
         print("-------------End Pecan help string-------------")
         return(0)
         
