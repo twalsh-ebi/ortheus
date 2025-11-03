@@ -4,6 +4,7 @@
 #
 #Released under the MIT license, see LICENSE.txt
 
+from functools import total_ordering
 import sys
 import os
 import re
@@ -182,6 +183,7 @@ def calculateCharacterFrequencies(seq, map, alphabetSize):
 #########################################################
 #########################################################
 
+@total_ordering
 class DistancePair:
     def __init__(self, distance, leaf1, leafNo1, leaf2, leafNo2):
         self.distance = distance
@@ -190,13 +192,14 @@ class DistancePair:
         self.leafNo1 = leafNo1
         self.leafNo2 = leafNo2
     
-    def __cmp__(self, distancePair):
-        if self.distance < distancePair.distance:
-            return -1
-        if self.distance > distancePair.distance:
-            return 1
-        return 0 #don't care
-        #doesn't wort for floats return self.distance.__cmp__(distancePair.distance)
+    def __eq__(self, distancePair):
+        return self.distance == distancePair.distance
+
+    def __gt__(self, distancePair):
+        return self.distance > distancePair.distance
+
+    def __lt__(self, distancePair):
+        return self.distance < distancePair.distance
         
 def correctTreeDistances(tree):
     import ortheus.old.bioio
