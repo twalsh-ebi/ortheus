@@ -29,7 +29,7 @@ def getDefaultLogger(level=logging.INFO):
     logger = logging.getLogger()
     logger.setLevel(level)
     handler = logging.StreamHandler(sys.stderr)
-    handler.setLevel(logging.CRITICAL) #null logger, to stop annoying error message
+    handler.setLevel(logging.ERROR) # discreet log level, to minimise annoying error messages
     logger.addHandler(handler)
     return logger
 
