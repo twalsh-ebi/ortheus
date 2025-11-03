@@ -4,6 +4,7 @@
 #
 #Released under the MIT license, see LICENSE.txt
 
+from functools import cmp_to_key
 import sys
 import os
 import re
@@ -334,7 +335,7 @@ def newickTreeParser(newickTree, defaultDistance=DEFAULT_DISTANCE, \
                     return 1
                 return 0
             if sortNonBinaryNodes:
-                subTreeList.sort(cmp)
+                subTreeList.sort(key=cmp_to_key(cmp))
             subTree1 = subTreeList[0]
             if len(subTreeList) > 1:
                 for subTree2 in subTreeList[1:]:
