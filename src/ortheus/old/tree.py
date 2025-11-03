@@ -4,6 +4,7 @@
 #
 #Released under the MIT license, see LICENSE.txt
 
+from collections import defaultdict
 from functools import total_ordering
 import sys
 import os
@@ -716,19 +717,21 @@ def calculateProbableRootOfGeneTree(speciesTree, geneTree, processID=lambda x : 
     if geneTree.traversalID.midEnd <= 3:
         return (geneTree, 0, 0)
     checkGeneTreeMatchesSpeciesTree(speciesTree, geneTree, processID)
-    l = []
+    l = defaultdict(list)
     def fn(tree):
         if tree.traversalID.mid != geneTree.left.traversalID.mid and tree.traversalID.mid != geneTree.right.traversalID.mid:
             newGeneTree = moveRoot(geneTree, tree.traversalID.mid)
             binaryTree_depthFirstNumbers(newGeneTree)
             dupCount, lossCount = calculateDupsAndLossesByReconcilingTrees(speciesTree, newGeneTree, processID)
-            l.append((dupCount, lossCount, newGeneTree))
+            l[(dupCount, lossCount)].append(newGeneTree)
         if tree.internal:
             fn(tree.left)
             fn(tree.right)
     fn(geneTree)
-    l.sort()
-    return l[0][2], l[0][0], l[0][1]
+    minDupCount, minLossCount = min(l.keys())
+    chosenTrees = l[(minDupCount, minLossCount)]
+    chosenTree = random.choice(chosenTrees) if len(chosenTrees) > 1 else chosenTrees[0]
+    return chosenTree, minDupCount, minLossCount
               
 #add traversalID.mid to each node name
 #print tree
