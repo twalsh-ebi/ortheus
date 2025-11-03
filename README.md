@@ -13,9 +13,9 @@ can provide a benefit to Ensembl.
 You can find more documentation on the UCSC page: (http://hgwdev.cse.ucsc.edu/~benedict/code/Ortheus.html)
 
 The main new features are:
-* new `-B` option to refer to a file that contains the Newick tree, instead
+* new `-T` option to refer to a file that contains the Newick tree, instead
   of passing the Newick tree itself as a command-line argument
-* new `-A` option to refer to a file that contains the paths of the Fasta
+* new `-F` option to refer to a file that contains the paths of the Fasta
   files to align, instead of passing these as command-line arguments.
 
 Significant bugs that are now fixed are:
@@ -36,29 +36,31 @@ the "next" version we will deploy in production.
 
 ## Installation
 
-Installing Ortheus.
+### Dependencies
 
 (1) Download and install Pecan
 
-(2) Download and install sonLib
+(2) Download and install Semphy, if tree estimation is required
 
-(3) Download and install Semphy, if tree estimation is required
+### Installation
 
-(4) Place the directory containing Ortheus on your python path, i.e.
-PYTHONPATH=${PYTHONPATH}:FOO
-where FOO/sonLib is the path to the base directory of Ortheus. 
+Within a suitable environment, ortheus may be installed as follows:
+```
+git clone --recurse-submodules https://github.com/Ensembl/ortheus.git
+cd ortheus
+pip install .
+```
 
-(5) Add the bin directory to your path:
-PATH=${PATH}:foo/ortheus/bin
-where foo/ortheus is the path to the base directory of Ortheus
+If you would like to run unit tests, you might consider specifying the
+`test` optional dependencies when calling the `pip install` command:
+```
+pip install .[test]
+```
 
-(6) Compile the C code:
-Modify the include.mk file to point at where you installed sonLib. You need not do this if 
-you install sonLib and ortheus in the same parent directory.
-In Ortheus type 'make all' 
+### Testing
 
-(7) Test the installation
-Type 'make test' in the base directory if ortheus is installed in the same parent directory as sonLib, else type 'python allTests.py'
+ortheus may be tested from within its repository's root directory by calling
+`make test`, or by typing `python3 allTests.py` to run the tests directly.
 
 The tests will not verify the installation of Pecan or Semphy currently, but rather just test the core Ortheus algorithms.
 

@@ -1,17 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
 #Released under the MIT license, see LICENSE.txt
 
+from functools import cmp_to_key
 import sys
 import os
 import re
 import logging
+import shlex
+import subprocess
 import tempfile
 
-#from tree import BinaryTree
-import ortheus.old.tree
+from ortheus.old.tree import BinaryTree
 
 DEFAULT_DISTANCE = 0.001
 
@@ -29,7 +31,7 @@ def getDefaultLogger(level=logging.INFO):
     logger = logging.getLogger()
     logger.setLevel(level)
     handler = logging.StreamHandler(sys.stderr)
-    handler.setLevel(logging.CRITICAL) #null logger, to stop annoying error message
+    handler.setLevel(logging.ERROR) # discreet log level, to minimise annoying error messages
     logger.addHandler(handler)
     return logger
 
@@ -47,7 +49,7 @@ def getDefaultArgs():
     return a()
 
 def printMod(indice, string):
-    print '\t-' + indice + ' ' + string
+    print('\t-' + indice + ' ' + string)
 
 def removeMod(indices, indice):
     indices.remove(indice)
@@ -87,7 +89,7 @@ def parseVarArgs(mods):
         i -= 1
     l = mods[i+1:]
     l.reverse()
-    for i in xrange(0, len(l)):
+    for i in range(0, len(l)):
         mods.pop()
     return l
 
@@ -143,17 +145,17 @@ def fastaRead_MultipleSequences(fasta, map=lambda x:x):
     """
     ignores all '>' lines and sucks up everything else, bar newline characters
     """
-    j = open(fasta, 'r')
+    j = open(fasta, 'r', encoding='ascii')
     seqs = []
     seq = None
     for i in j:
         if i[0] != '>':
             seq = seq + [ map(k) for k in i[:-1] ]
         else:
-            if seq != None:
+            if seq is not None:
                 seqs.append(seq)
             seq = []
-    if seq != None:
+    if seq is not None:
         seqs.append(seq)
     j.close()
     return seqs
@@ -162,7 +164,7 @@ def fastaRead(fasta, map=lambda x:x):
     """
     ignores all '>' lines and sucks up everything else, bar newline characters
     """
-    j = open(fasta, 'r')
+    j = open(fasta, 'r', encoding='ascii')
     seq = [ map(i) for i in "".join([ i[:-1] for i in j if i[0] != '>' ]) ]
     j.close()
     return seq
@@ -171,7 +173,7 @@ def getMultiFastaOffsets(fasta):
     """
     reads in columns of multiple alignment and returns them iteratively
     """
-    f = open(fasta, 'r')
+    f = open(fasta, 'r', encoding='ascii')
     i = 0
     j = f.read(1)
     l = []
@@ -190,30 +192,30 @@ def multiFastaRead(fasta, map=lambda x : x, l=None):
     """
     reads in columns of multiple alignment and returns them iteratively
     """
-    if l == None:
+    if l is None:
         l = getMultiFastaOffsets(fasta)
     else:
         l = l[:]
     seqNo = len(l)
-    for i in xrange(0, seqNo):
-        j = open(fasta, 'r')
+    for i in range(0, seqNo):
+        j = open(fasta, 'r', encoding='ascii')
         j.seek(l[i])
         l[i] = j
-    column = [sys.maxint]*seqNo
+    column = [sys.maxsize]*seqNo
     if seqNo != 0:
         while True:
-            for j in xrange(0, seqNo):
+            for j in range(0, seqNo):
                 i = l[j].read(1)
                 while i == '\n':
                     i = l[j].read(1)
                 column[j] = i
             if column[0] == '>' or column[0] == '':
-                for j in xrange(1, seqNo):
+                for j in range(1, seqNo):
                     assert column[j] == '>' or column[j] == ''
                 break
-            for j in xrange(1, seqNo):
-                 assert column[j] != '>' and column[j] != ''
-                 column[j] = map(column[j])
+            for j in range(1, seqNo):
+                assert column[j] != '>' and column[j] != ''
+                column[j] = map(column[j])
             yield column[:]
     for i in l:
         i.close()
@@ -223,8 +225,8 @@ def writeFastaFile(seqs, names, seqNo, fastaFile,
     """
     Writes out column alignment to given file multi-fasta format
     """
-    fastaFile = open(fastaFile, 'w')
-    for seq in xrange(0, seqNo):
+    fastaFile = open(fastaFile, 'w', encoding='ascii')
+    for seq in range(0, seqNo):
         fastaFile.write(">%s\n" % names[seq])
         for base in seqs[seq]:
             fastaFile.write(filter(base))
@@ -236,9 +238,9 @@ def writeFastaAlignment(columnAlignment, names, seqNo, fastaFile,
     """
     Writes out column alignment to given file multi-fasta format
     """
-    fastaFile = open(fastaFile, 'w')
-    columnAlignment = [ i for i in columnAlignment if filter(i) ]
-    for seq in xrange(0, seqNo):
+    fastaFile = open(fastaFile, 'w', encoding='ascii')
+    columnAlignment = [ i for i in columnAlignment if list(filter(i)) ]
+    for seq in range(0, seqNo):
         fastaFile.write(">%s\n" % names[seq])
         for column in columnAlignment:
             fastaFile.write(column[seq])
@@ -258,10 +260,10 @@ def concatanateSeqFiles(seqFiles, outputFile, seqNo, nodeNames):
     concatenate sequence files into one file
     """
     #turn into one alignment
-    outputFile = open(outputFile, 'w')
-    for seq in xrange(0, seqNo):
+    outputFile = open(outputFile, 'w', encoding='ascii')
+    for seq in range(0, seqNo):
         outputFile.write(">%s\n" % nodeNames[seq])
-        j = open(seqFiles[seq], 'r')
+        j = open(seqFiles[seq], 'r', encoding='ascii')
         for i in j:
             outputFile.write(i)
         j.close()
@@ -269,16 +271,16 @@ def concatanateSeqFiles(seqFiles, outputFile, seqNo, nodeNames):
     outputFile.close()
     
 def getOpenSeqFiles(seqNo, getTempFile):
-    seqFiles = [ getTempFile() for seq in xrange(0, seqNo) ]
-    seqIterators = [ open(seqFiles[seq], 'w') for seq in xrange(0, seqNo) ]
+    seqFiles = [ getTempFile() for seq in range(0, seqNo) ]
+    seqIterators = [ open(seqFiles[seq], 'w', encoding='ascii') for seq in range(0, seqNo) ]
     return (seqFiles, seqIterators)
 
 def closeSeqIterators(seqIterators, seqNo):
-    for seq in xrange(0, seqNo):
+    for seq in range(0, seqNo):
         seqIterators[seq].close();
     
 def removeSeqFiles(seqFiles, seqNo):
-    for seq in xrange(0, seqNo):
+    for seq in range(0, seqNo):
         os.remove(seqFiles[seq])
         
 #########################################################
@@ -300,7 +302,7 @@ def newickTreeParser(newickTree, defaultDistance=DEFAULT_DISTANCE, \
     newickTree = newickTree.replace(";", "")
     newickTree = newickTree.replace(",", " , ")
     
-    newickTree = re.compile("[\s]*").split(newickTree)
+    newickTree = re.compile("[\\s]+").split(newickTree)
     while "" in newickTree:
         newickTree.remove("")
     def fn(newickTree, i):
@@ -335,15 +337,15 @@ def newickTreeParser(newickTree, defaultDistance=DEFAULT_DISTANCE, \
                     return 1
                 return 0
             if sortNonBinaryNodes:
-                subTreeList.sort(cmp)
+                subTreeList.sort(key=cmp_to_key(cmp))
             subTree1 = subTreeList[0]
             if len(subTreeList) > 1:
                 for subTree2 in subTreeList[1:]:
-                    subTree1 = ortheus.old.tree.BinaryTree(0.0, True, subTree1, subTree2, None)
+                    subTree1 = BinaryTree(0.0, True, subTree1, subTree2, None)
                 subTree1.iD = fn2(newickTree, i)
                 subTree1.distance += fn(newickTree, i)
             elif reportUnaryNodes:
-                subTree1 = ortheus.old.tree.BinaryTree(0.0, True, subTree1, None, None)
+                subTree1 = BinaryTree(0.0, True, subTree1, None, None)
                 subTree1.iD = fn2(newickTree, i)
                 subTree1.distance += fn(newickTree, i)
             else:
@@ -351,18 +353,18 @@ def newickTreeParser(newickTree, defaultDistance=DEFAULT_DISTANCE, \
                 subTree1.distance += fn(newickTree, i)
             return subTree1
         leafID = fn2(newickTree, i)
-        return ortheus.old.tree.BinaryTree(fn(newickTree, i), False, None, None, leafID)
+        return BinaryTree(fn(newickTree, i), False, None, None, leafID)
     return fn3(newickTree, [0])
 
 def printBinaryTree(binaryTree, includeDistances, dontStopAtID=True):
     def fn(binaryTree):
-        #print " tree Node ", binaryTree.left, binaryTree.right, binaryTree.distance, binaryTree.internal, binaryTree.iD 
-        if binaryTree.iD != None:
+        #print(" tree Node ", binaryTree.left, binaryTree.right, binaryTree.distance, binaryTree.internal, binaryTree.iD)
+        if binaryTree.iD is not None:
             iD = str(binaryTree.iD)
         else:
             iD = ''
-        if binaryTree.internal and (dontStopAtID or binaryTree.iD == None):
-            if binaryTree.right != None:
+        if binaryTree.internal and (dontStopAtID or binaryTree.iD is None):
+            if binaryTree.right is not None:
                 s = '(' + fn(binaryTree.left) + ',' + fn(binaryTree.right) + ')' + iD
             else:
                 s = '(' + fn(binaryTree.left) + ')' + iD
@@ -386,15 +388,15 @@ def pWMParser(pWMFile, alphabetSize=4):
     reads in standard position weight matrix format,
     rows are different types of base, columns are individual residues
     """
-    lines = open(pWMFile, 'r').readlines()
+    lines = open(pWMFile, 'r', encoding='ascii').readlines()
     assert len(lines) == alphabetSize
     l = [ [ float(i) ] for i in lines[0].split() ]
     for line in lines[1:]:
         l2 = [ float(i) for i in line.split() ]
         assert len(l) == len(l2)
-        for i in xrange(0, len(l)):
+        for i in range(0, len(l)):
             l[i].append(l2[i])
-    for i in xrange(0, len(l)):
+    for i in range(0, len(l)):
         j = sum(l[i]) + 0.0
         l[i] = [ k/j for k in l[i] ]
     return l
@@ -403,11 +405,11 @@ def writePWM(pWM, out, alphabetSize=4):
     """
     Writes file in standard PWM format, is reverse of pWMParser
     """
-    for i in xrange(0, alphabetSize):
-        out.write("%s\n" % ' '.join([ str(pWM[j][i]) for j in xrange(0, len(pWM)) ]))
+    for i in range(0, alphabetSize):
+        out.write("%s\n" % ' '.join([ str(pWM[j][i]) for j in range(0, len(pWM)) ]))
 
 def writePWMFile(pWM, outFile, alphabetSize=4):
-    i = open(outFile, 'w')
+    i = open(outFile, 'w', encoding='ascii')
     writePWM(pWM, i, alphabetSize)
     i.close()
 
@@ -450,18 +452,18 @@ def parseCigars(cigarFile):
     """
     converts file into list of cigars
     """
-    cigarFile = open(cigarFile, 'r')
+    cigarFile = open(cigarFile, 'r', encoding='ascii')
     cigars = []
     p = re.compile("cigar:\\s+(.+)\\s+([0-9]+)\\s+([0-9]+)\\s+([\\+\\-\\.])\\s+(.+)\\s+([0-9]+)\\s+([0-9]+)\\s+([\\+\\-\\.])\\s+([0-9]+)(\\s+(.*)\\s*)*")
     for line in cigarFile.readlines():
         i = p.match(line)
-        if i != None:
+        if i is not None:
             m = i.groups()
             if len(m) == 11:
                 l = m[10].split(" ")
                 ops = []
                 assert len(l) % 2 == 0
-                for j in xrange(0, len(l), 2):
+                for j in range(0, len(l), 2):
                     if l[j] == 'M':
                         ops.append((CIGAR_MATCH, int(l[j+1])))
                     elif l[j] == 'D':
@@ -494,12 +496,30 @@ def runExonerate(querySeqFile, targetSeqFile, path='exonerate', stringOptions=RU
     runs exonerate, with given options, returns a list of cigars
     """
     f = getTempFile("bioio")
-    com = "%s --showcigar true --showvulgar false --showalignment false %s %s %s > %s" % (path, stringOptions, querySeqFile, targetSeqFile, f)
-    print "commmand :", com
-    exitValue = os.system(com)
-    if exitValue != 0:
-        logger.info("Something went wrong calling Exoncerate : %i ", exitValue)
-        sys.exit(1)
+
+    com = [
+        path,
+        "--showcigar",
+        "true",
+        "--showvulgar",
+        "false",
+        "--showalignment",
+        "false",
+    ] + shlex.split(stringOptions) + [
+        querySeqFile,
+        targetSeqFile,
+    ]
+
+    print("commmand :", shlex.join(com))
+    with open(f, mode="w", encoding="ascii") as temp_file_obj:
+        try:
+            subprocess.run(com, stdout=temp_file_obj, check=True)
+        except subprocess.CalledProcessError as exc:
+            logger.exception(
+                "Something went wrong calling Exonerate (return code: %i)",
+                exc.returncode,
+            )
+            sys.exit(exc.returncode)
     c = parseCigars(f)
     os.remove(f)
     return c

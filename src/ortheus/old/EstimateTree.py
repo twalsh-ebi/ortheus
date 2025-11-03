@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
 #Released under the MIT license, see LICENSE.txt
 
+import shlex
+import subprocess
 import sys
 import os
 
@@ -139,12 +141,12 @@ def makeStarTree(seqNo, counter, defaultDistance):
     makes binary tree, using the example of MAVIDs tree construction
     """
     if seqNo >= 2:
-        return BinaryTree(defaultDistance, True, makeStarTree(seqNo/2, counter, defaultDistance), makeStarTree((seqNo/2) + (seqNo%2), counter+(seqNo/2), defaultDistance), None)
+        return BinaryTree(defaultDistance, True, makeStarTree(seqNo//2, counter, defaultDistance), makeStarTree((seqNo//2) + (seqNo%2), counter+(seqNo//2), defaultDistance), None)
     return BinaryTree(defaultDistance, False, None, None, None)
         
 def splitOutAncestors(alignmentFile, outputAlignmentFile):
-    alignment = open(alignmentFile, 'r')
-    out = open(outputAlignmentFile, 'w')
+    alignment = open(alignmentFile, 'r', encoding='ascii')
+    out = open(outputAlignmentFile, 'w', encoding='ascii')
     counter = 0
     for line in alignment:
         if line[0] == '>':
@@ -158,9 +160,9 @@ def splitOutAncestors(alignmentFile, outputAlignmentFile):
     alignment.close()
     
 def formatForSemphy(alignmentFile):
-    alignment = open(alignmentFile, 'r')
+    alignment = open(alignmentFile, 'r', encoding='ascii')
     outputAlignmentFile = getTempFile()
-    out = open(outputAlignmentFile, 'w')
+    out = open(outputAlignmentFile, 'w', encoding='ascii')
     counter = 0
     for line in alignment:
         if line[0] == '>':
@@ -187,15 +189,24 @@ def calculateSemphyTreeEstimate(alignmentFile, treeArgs, seqNo):
     semphyAlignmentFile = formatForSemphy(alignmentFile)
     outputTreeFile = getTempFile()
     characterFrequencies = " --ACGprob=%f,%f,%f" % tuple(treeArgs.EXPECTED_CHARACTER_FREQUENCIES[:-1])
-    command = "%s --treeoutputfile=%s %s %s --sequence=%s " % (treeArgs.SEMPHY_PATH, outputTreeFile, semphyArgs, characterFrequencies, semphyAlignmentFile)
-    #if existingTreeFile != None: #just optimise branch lengths
-    #    command += " --bbl --tree=%s " % existingTreeFile
-    logger.info("Calling Semphy with %s ", command)
-    pipe = os.popen(command)
-    if pipe.close():
-        logger.info("tree building failed, so must exit")
-        sys.exit(1)
-    fileHandle = open(outputTreeFile, 'r')
+
+    semphyCmdArgs = [
+        treeArgs.SEMPHY_PATH,
+        f"--treeoutputfile={outputTreeFile}",
+    ] + shlex.split(semphyArgs) + [
+        characterFrequencies,
+        f"--sequence={semphyAlignmentFile}",
+    ]
+
+    #if existingTreeFile is not None: #just optimise branch lengths
+    #    commandArgs.extend(["--bbl", f"--tree={existingTreeFile}"])
+    logger.info("Calling Semphy with %s ", shlex.join(semphyCmdArgs))
+    try:
+        subprocess.run(semphyCmdArgs, stdout=subprocess.DEVNULL, check=True)
+    except subprocess.CalledProcessError as exc:
+        logger.exception("Something went wrong with tree building (return code: %d), so must exit", exc.returncode)
+        sys.exit(exc.returncode)
+    fileHandle = open(outputTreeFile, 'r', encoding='ascii')
     treeString = fileHandle.readlines()[0]
     fileHandle.close()
     binaryTree = newickTreeParser(treeString, False)
@@ -220,10 +231,10 @@ def getGaplessAlignment(alignment, seqNo):
     outputFiles, outputIters = getOpenSeqFiles(seqNo, getTempFile)
     for column in multiFastaRead(alignment):
         if '-' not in column:
-            for i in xrange(0, seqNo):
+            for i in range(0, seqNo):
                 outputIters[i].write(column[i])
     closeSeqIterators(outputIters, seqNo)
-    concatanateSeqFiles(outputFiles, outputAlignment, seqNo, [ str(i) for i in xrange(0, seqNo) ])
+    concatanateSeqFiles(outputFiles, outputAlignment, seqNo, [ str(i) for i in range(0, seqNo) ])
     removeSeqFiles(outputFiles, seqNo)
     return outputAlignment
         
@@ -280,7 +291,7 @@ def estimateTree(seqFiles, tree, iterations, doSubTreeBranchEstimation, treeArgs
     seqNo = len(seqFiles)
     #run alignment
     treeStrings = [ printBinaryTree(tree, False) + " " + " ".join(seqFiles) ]
-    for iteration in xrange(0, iterations):
+    for iteration in range(0, iterations):
         ####edit this line to set
         outputAlignment = getTempFile()
         makeAlignment(seqFiles, tree, outputAlignment, treeArgs)
@@ -314,7 +325,7 @@ def estimateTree(seqFiles, tree, iterations, doSubTreeBranchEstimation, treeArgs
                 subTree2, seqFiles2, outputAlignment2 = estimateTree(getSubtreeSeqs(seqFiles, subTree), subTree, 1, False, treeArgs)
                 os.remove(outputAlignment2)
                 rateCorrections.append(calculateRateCorrection(subTree, subTree2))
-            for i in xrange(0, len(subTrees)):
+            for i in range(0, len(subTrees)):
                 logger.info("Rate correction for subtree: %s %s , is calculated as : %f ", \
                             printBinaryTree(subTrees[i], True), \
                             " ".join(getSubtreeSeqs(seqFiles, subTrees[i])), rateCorrections[i])
@@ -333,7 +344,7 @@ def estimateTreeAlign(seqFiles, outputTreeFile, treeArgs):
     tree, seqFiles, outputAlignment = estimateTree(seqFiles, tree, treeArgs.ITERATION_NUMBER, \
                                                     treeArgs.DO_SUBTREE_BRANCH_LENGTH_ESTIMATION, treeArgs)
     seqFiles = list(seqFiles)
-    if treeArgs.SPECIES_TREE_STRING != None:
+    if treeArgs.SPECIES_TREE_STRING is not None:
         logger.info("Predicting root of tree using species tree")
         speciesTree = newickTreeParser(treeArgs.SPECIES_TREE_STRING)
         binaryTree_depthFirstNumbers(speciesTree)
@@ -357,7 +368,7 @@ def estimateTreeAlign(seqFiles, outputTreeFile, treeArgs):
         logger.info("Number of dups needed for reconcilliations : %s " % dupCount)
         logger.info("Number of losses needed for reconcilliations : %s " % lossCount)
     seqFiles = list(seqFiles)
-    out = open(outputTreeFile, 'w')
+    out = open(outputTreeFile, 'w', encoding='ascii')
     out.write("%s\n" % printBinaryTree(tree, True))
     out.write("%s\n" % " ".join(seqFiles))
     out.close()

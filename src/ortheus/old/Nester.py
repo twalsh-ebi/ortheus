@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -61,13 +61,13 @@ def extractSubAlignment(alignmentFile, startSeq, endSeq, newAlignmentFile):
     seqNo = endSeq-startSeq
     outputFiles, outputIters = getOpenSeqFiles(seqNo, getTempFile)
     for column in multiFastaRead(alignmentFile):
-        for i in xrange(startSeq, endSeq):
+        for i in range(startSeq, endSeq):
             if column[i] != '-':
-                for j in xrange(startSeq, endSeq):
+                for j in range(startSeq, endSeq):
                     outputIters[j-startSeq].write(column[j])
                 break
     closeSeqIterators(outputIters, seqNo)
-    concatanateSeqFiles(outputFiles, newAlignmentFile, seqNo, [ str(i) for i in xrange(startSeq, endSeq) ])
+    concatanateSeqFiles(outputFiles, newAlignmentFile, seqNo, [ str(i) for i in range(startSeq, endSeq) ])
     removeSeqFiles(outputFiles, seqNo)
 
 def outputMergedColumn(outputIters, i, j, k):
@@ -93,7 +93,7 @@ def mergeAlignments(daddyAlignmentFile, childAlignmentFile, childSeq, childSeq2,
     childIter = multiFastaRead(childAlignmentFile)
     def nextChild():
         try:
-            return childIter.next()
+            return next(childIter)
         except StopIteration:
             return None
     childColumn = nextChild()
@@ -106,7 +106,7 @@ def mergeAlignments(daddyAlignmentFile, childAlignmentFile, childSeq, childSeq2,
             childColumn = nextChild()
         else:
             outputMergedColumn(outputIters, daddyColumn[:childSeq], childGapColumn, daddyColumn[childSeq+1:])
-    while childColumn != None:
+    while childColumn is not None:
         outputMergedColumn(outputIters, topDaddyGapColumn, childColumn, bottomDaddyGapColumn)
         childColumn = nextChild()
     closeSeqIterators(outputIters, totalSeqNo)
@@ -117,7 +117,7 @@ def mergeTogetherAllAlignments(binaryTree, alignmentFiles, nodeLabels, subTreeCo
     subTreeCounter[0] += 1
     if binaryTree.internal:
         alignmentFile = alignmentFiles[binaryTree.traversalID.mid]
-        if alignmentFile != None:
+        if alignmentFile is not None:
             subTreeCounter=[1]
             childAlignments = mergeTogetherAllAlignments(binaryTree.left, alignmentFiles, nodeLabels, subTreeCounter) + mergeTogetherAllAlignments(binaryTree.right, alignmentFiles, nodeLabels, subTreeCounter)
             for childAlignmentFile, childTree in childAlignments:
@@ -131,10 +131,10 @@ def mergeTogetherAllAlignments(binaryTree, alignmentFiles, nodeLabels, subTreeCo
     return ()
     
 def getChildSeqs(binaryTree, seqFiles):
-    if binaryTree == None:
+    if binaryTree is None:
         return ()
     seqFile = seqFiles[binaryTree.traversalID.mid]
-    if seqFile != None:
+    if seqFile is not None:
         return (seqFile,)
     return getChildSeqs(binaryTree.left, seqFiles) + getChildSeqs(binaryTree.right, seqFiles)
 
@@ -150,9 +150,9 @@ def calculateTreeNodeCosts(binaryTree, alpha=1.5):
     binaryTreeNodes = []
     getBinaryTreeNodes(binaryTree, binaryTreeNodes)
     subMatrices = [ subMatrix(i.distance) for i in binaryTreeNodes ]
-    leaves = [ (1.0, 0.0) for i in xrange(0, binaryTree.traversalID.midEnd) ]
+    leaves = [ (1.0, 0.0) for i in range(0, binaryTree.traversalID.midEnd) ]
     j = felsensteins(binaryTree, subMatrices, (0.5, 0.5), leaves, 2)
-    for i in j.keys():
+    for i in list(j.keys()):
         j[i] = normaliseWV(j[i])[0]
     finalCosts = [ avg(i, j, felsensteins(i, subMatrices, (0.5, 0.5), leaves, 2)) for i in binaryTreeNodes ]
     return finalCosts
@@ -176,17 +176,17 @@ def calculatePath(binaryTree, costs, maxSeqNo):
             for i in matrixLeft.keys():
                 for j in matrixRight.keys():
                     k = matrixLeft[i] + matrixRight[j]
-                    if (not matrixNode.has_key(i + j + 1)) or matrixNode[i + j + 1] > k:
+                    if (i + j + 1 not in matrixNode) or matrixNode[i + j + 1] > k:
                         matrixNode[i + j + 1] = k
                         pointersNode[i + j + 1] = pointersLeft[i] + pointersRight[j]
-            j = sys.maxint
+            j = sys.maxsize
             k = None
-            for i in xrange(3, maxSeqNo+1):
-                if matrixNode.has_key(i) and matrixNode[i] < j:
+            for i in range(3, maxSeqNo+1):
+                if i in matrixNode and matrixNode[i] < j:
                     j = matrixNode[i]
                     k = pointersNode[i]
             j += costs[iD]
-            if (not matrixNode.has_key(3)) or j < matrixNode[3]: #don't replace 3 way internal nodes with two leaves attached
+            if (3 not in matrixNode) or j < matrixNode[3]: #don't replace 3 way internal nodes with two leaves attached
                 matrixNode[3] = j
                 pointersNode[3] = k + (binaryTree,)
             matrix[iD] = matrixNode
@@ -195,22 +195,22 @@ def calculatePath(binaryTree, costs, maxSeqNo):
             matrix[iD] = { 1:0.0 }
             pointers[iD] = { 1:() }
     fn(binaryTree)
-    j = sys.maxint
-    k = sys.maxint
+    j = sys.maxsize
+    k = sys.maxsize
     iD = binaryTree.traversalID.mid
     matrixNode = matrix[iD]
     for i in matrixNode.keys():
         if i > 3 and i < maxSeqNo+1 and matrixNode[i] < j:
             j = matrixNode[i]
             k = i
-    if j != sys.maxint:
+    if j != sys.maxsize:
         return (j, pointers[iD][k])
     return (0.0, ())
 
 def removeInternalIDs(binaryTree):
     """Removes the ids from internal nodes.
     """
-    if binaryTree.internal == True:
+    if binaryTree.internal:
         binaryTree.iD = None
     if binaryTree.left:
         removeInternalIDs(binaryTree.left)
@@ -236,14 +236,14 @@ def nestAlign(binaryTree, leafSeqFiles, outputFile, outputScoreFile, alignerArgs
     labels = binaryTree_nodeNames(binaryTree)
     costs = calculateTreeNodeCosts(binaryTree)
     logger.info("Calculated node costs")
-    for node in xrange(0, nodeNo):
+    for node in range(0, nodeNo):
         logger.info("Node : %s , reconstruction value : %f , %f" % (labels[node], costs[node], 1.0 - costs[node]))
     pathCost, treePath = calculatePath(binaryTree, costs, maxNodeNo)
     logger.info(" Calculated nested path. Cost : %f , Path : %s" % (pathCost, " ".join([ labels[i.traversalID.mid] for i in treePath ])))
     assert len(leafSeqFiles) == seqNo
     alignmentFiles = [None] * nodeNo
     seqFiles = [None] * nodeNo
-    for i in xrange(0, seqNo):
+    for i in range(0, seqNo):
         seqFiles[i*2] = leafSeqFiles[i]
     logger.debug("About to start main nested loop")
     for subTree in treePath:
@@ -292,8 +292,8 @@ def nestAlign(binaryTree, leafSeqFiles, outputFile, outputScoreFile, alignerArgs
     alignmentFiles[binaryTree.traversalID.mid] = outputFile
     mergeTogetherAllAlignments(binaryTree, alignmentFiles, labels, [0])
     logger.info("Merged together all alignments")
-    for i in xrange(1, nodeNo, 2):
-        if seqFiles[i] != None:
+    for i in range(1, nodeNo, 2):
+        if seqFiles[i] is not None:
             os.remove(seqFiles[i])
     removeInternalIDs(binaryTree)
     logger.info("Have cleaned up, and am returning")

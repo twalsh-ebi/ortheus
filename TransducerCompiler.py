@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2008-2011 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -67,7 +67,7 @@ class Model:
         return self.inverseMatrix[state].copy()
         
     def getStateNames(self, stateType=None):
-        if stateType == None:
+        if stateType is None:
             return list(self.statesList)
         return [ i for i in self.statesList if self.getStateType(i) == stateType ]
     
@@ -86,7 +86,7 @@ class Model:
         function.
         """
         l = [0]*len(self.statesList)
-        for i in xrange(len(self.statesList)+10):
+        for i in range(len(self.statesList)+10):
             for stateTo in self.statesList:
                 toType = self.getStateType(stateTo)
                 toIndex = self.statesList.index(stateTo)
@@ -98,9 +98,9 @@ class Model:
                             l[toIndex] = l[fromIndex]+1
                         elif toType == DELETE_XZ and fromType != SILENT and \
                                                      fromType != DELETE_XZ:
-                            #print "better thab", stateFrom, stateTo
+                            #print("better thab", stateFrom, stateTo)
                             l[toIndex] = l[fromIndex]+1
-        l = [ (l[i], self.statesList[i]) for i in xrange(len(l)) ]
+        l = [ (l[i], self.statesList[i]) for i in range(len(l)) ]
         l.sort()
         self.statesList = [ i[1] for i in l ]
         
@@ -153,7 +153,7 @@ def parseFile(inputFile):
     silentModel = Model()
     subModel = None
         
-    inputFile = open(inputFile, 'r')
+    inputFile = open(inputFile, 'r', encoding='ascii')
     line = getNextNonCommentLine(inputFile)
     while line != '':
         if line[0] == 'P' or line[0] == 'C' or line[0] == 'O' or line[0] == 'B':
@@ -236,7 +236,7 @@ class HKYSubModel:
 def writeHModel(outputFile, primaryParameterList, parameterList, cParameters, forwardModel, silentModel, subModel):
     """This function writes the header file.
     """
-    outputFile = open(outputFile, 'w')
+    outputFile = open(outputFile, 'w', encoding='ascii')
     
     #Write header lines
     outputFile.write("#ifndef XYZMODELC_H_\n")
@@ -259,15 +259,15 @@ def writeHModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     #Now write out all transitions
     for toState in forwardModel.getStateNames():
         i = forwardModel.getTransitionsTo(toState)
-        for fromState in i.keys():
-            #print "This is", fromState, toState, i[fromState]
+        for fromState in sorted(i.keys()):
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\tfloat ft%s_%s;\n" % (fromState, toState))
             outputFile.write("\tfloat tbt%s_%s;\n" % (fromState, toState))
     outputFile.write("\n")
     
     for toState in silentModel.getStateNames():
         for fromState in silentModel.getStateNames():
-            #print "This is", fromState, toState, i[fromState]
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\tfloat lt%s_%s;\n" % (fromState, toState))
     
     outputFile.write("};\n")
@@ -283,7 +283,7 @@ def writeHModel(outputFile, primaryParameterList, parameterList, cParameters, fo
 def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, forwardModel, silentModel, subModel):
     """This function writes the .c file.
     """
-    outputFile = open(outputFile, 'w')
+    outputFile = open(outputFile, 'w', encoding='ascii')
     
     #Write header lines
     outputFile.write("#include <stdio.h>\n")
@@ -358,8 +358,8 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     #Now write out all transitions
     for toState in forwardModel.getStateNames():
         i = forwardModel.getTransitionsTo(toState)
-        for fromState in i.keys():
-            #print "This is", fromState, toState, i[fromState]
+        for fromState in sorted(i.keys()):
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\ttemp->ft%s_%s = LOG(%s);\n" % (fromState, toState, i[fromState]))
             outputFile.write("\ttemp->tbt%s_%s = LOG(%s);\n" % (fromState, toState, replaceCParameters(i[fromState], cParameters)))
             outputFile.write('\tst_logInfo("From state %s, To state %s, Forward Parameter %%f Traceback parameter %%f \\n", temp->ft%s_%s, temp->tbt%s_%s);\n' % (fromState, toState, fromState, toState, fromState, toState))
@@ -369,8 +369,8 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     #Write out non-log parameters.
     for toState in silentModel.getStateNames():
         i = silentModel.getTransitionsTo(toState)
-        for fromState in i.keys():
-            #print "This is", fromState, toState, i[fromState]
+        for fromState in sorted(i.keys()):
+            #print("This is", fromState, toState, i[fromState])
             outputFile.write("\tfloat tlt%s_%s = %s;\n" % (fromState, toState, i[fromState]))
     outputFile.write("\t float fA[STATE_NO];\n") 
     outputFile.write("\t float fA1[STATE_NO];\n") 
@@ -416,7 +416,7 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
         outputFile.write("inline void %sFn(struct AlignmentDataStructures *aDS, struct CombinedTransitionModel *model, struct Edge *edge," % functionName) 
         outputFile.write("void (*assignFn)(struct AlignmentDataStructures *aDS, int64_t, int64_t, float)) {\n")
         for toState in forwardModel.getStateNames(stateType):
-            for fromState in forwardModel.getTransitionsTo(toState).keys():
+            for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
                 if not forwardModel.isStart(fromState):
                     outputFile.write("\tassignFn(aDS, %s, %s, model->ft%s_%s + edge->edgeScore + edge->subScore);\n" \
                                      % (fromState, toState, fromState, toState))
@@ -427,14 +427,14 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
         
         outputFile.write("\tif (model->includeRoot) {\n\t\tfloat i;\n")
         for toState in forwardModel.getStateNames(stateType):
-            for fromState in forwardModel.getTransitionsTo(toState).keys():
+            for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
                 if not forwardModel.isStart(fromState):
                     outputFile.write("\t\ti = model->ft%s_%s + edge->edgeScore + edge->subScore;\n" % (fromState, toState))
                     outputFile.write("\t\tassignFn(aDS, %s, %s, i, i);\n" % (fromState, toState))
         outputFile.write("\t}\n")  
         outputFile.write("\telse {\n")
         for toState in forwardModel.getStateNames(stateType):
-            for fromState in forwardModel.getTransitionsTo(toState).keys():
+            for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
                 if not forwardModel.isStart(fromState):
                     outputFile.write("\t\tassignFn(aDS, %s, %s, model->ft%s_%s + edge->edgeScore + edge->subScore, model->tbt%s_%s + edge->edgeScore);\n" \
                                      % (fromState, toState, fromState, toState, fromState, toState))
@@ -451,7 +451,7 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     outputFile.write("\tmultiplyWV(edgeX->wV, edgeY->wV, m, ALPHABET_SIZE);\n")
     outputFile.write("\ti = LOG(combineWV(m, model->ancestorProbs, ALPHABET_SIZE));\n")
     for toState in forwardModel.getStateNames(MATCH):
-        for fromState in forwardModel.getTransitionsTo(toState).keys():
+        for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
             if not forwardModel.isStart(fromState):
                 outputFile.write("\tj = model->ft%s_%s + edgeX->edgeScore + edgeY->edgeScore + i;\n" % (fromState, toState))
                 outputFile.write("\tassignFn(aDS, %s, %s, j);\n"  % (fromState, toState))
@@ -471,14 +471,14 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     
     outputFile.write("\tif (model->includeRoot) {\n")
     for toState in forwardModel.getStateNames(MATCH): 
-        for fromState in forwardModel.getTransitionsTo(toState).keys():
+        for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
             if not forwardModel.isStart(fromState):
                 outputFile.write("\t\tl = model->ft%s_%s + edgeX->edgeScore + edgeY->edgeScore + j;\n" % (fromState, toState))
                 outputFile.write("\t\tassignFn(aDS, %s, %s, l, l);\n"  % (fromState, toState))
     outputFile.write("\t}\n") 
     outputFile.write("\telse {\n")
     for toState in forwardModel.getStateNames(MATCH): 
-        for fromState in forwardModel.getTransitionsTo(toState).keys():
+        for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
             if not forwardModel.isStart(fromState):
                 outputFile.write("\t\tk = model->tbt%s_%s + edgeX->edgeScore + edgeY->edgeScore + i;\n" % (fromState, toState))
                 outputFile.write("\t\tl = model->ft%s_%s + edgeX->edgeScore + edgeY->edgeScore + j;\n" % (fromState, toState))
@@ -491,7 +491,7 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     outputFile.write("void (*assignFn)(struct AlignmentDataStructures *aDS, int64_t, int64_t, float)) {\n")
     
     for toState in silentModel.getStateNames():
-        for fromState in forwardModel.getTransitionsTo(toState).keys():
+        for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
             if not forwardModel.isStart(fromState):
                 i = forwardModel.getStateType(fromState)
                 if i != SILENT and i != DELETE_XZ:
@@ -513,14 +513,14 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
         outputFile.write("inline void %sFn_TraceBack(struct AlignmentDataStructures *aDS, struct CombinedTransitionModel *model, void (*assignFn)(struct AlignmentDataStructures *aDS, int64_t, int64_t, float, float)) {\n" % functionName)
         outputFile.write("\tif (model->includeRoot) {\n")
         for toState in forwardModel.getStateNames(stateType):
-            for fromState in forwardModel.getTransitionsTo(toState).keys():
+            for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
                 if not forwardModel.isStart(fromState):
                     outputFile.write("\t\tassignFn(aDS, %s, %s, model->ft%s_%s, model->ft%s_%s);\n" \
                                      % (fromState, toState, fromState, toState, fromState, toState))
         outputFile.write("\t}\n") 
         outputFile.write("\telse {\n")
         for toState in forwardModel.getStateNames(stateType):
-            for fromState in forwardModel.getTransitionsTo(toState).keys():
+            for fromState in sorted(forwardModel.getTransitionsTo(toState).keys()):
                 if not forwardModel.isStart(fromState):
                     outputFile.write("\t\tassignFn(aDS, %s, %s, model->ft%s_%s, model->tbt%s_%s);\n" \
                                      % (fromState, toState, fromState, toState, fromState, toState))        
@@ -539,7 +539,7 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     i = forwardModel.getStateNames(START)
     assert len(i) == 1, "More than one start state"
     startState = list(i)[0]
-    for toState in forwardModel.getTransitionsFrom(startState).keys():
+    for toState in sorted(forwardModel.getTransitionsFrom(startState).keys()):
         if forwardModel.getStateType(toState) != END:
             outputFile.write("\ti[%s] = model->ft%s_%s;\n" % (toState, startState, toState))
     outputFile.write("\treturn i; \n}\n\n")
@@ -551,7 +551,7 @@ def writeCModel(outputFile, primaryParameterList, parameterList, cParameters, fo
     i = forwardModel.getStateNames(END)
     assert len(i) == 1, "More than one end state"
     endState = list(i)[0]
-    for fromState in forwardModel.getTransitionsTo(endState).keys():
+    for fromState in sorted(forwardModel.getTransitionsTo(endState).keys()):
         if forwardModel.getStateType(fromState) != START:
             outputFile.write("\ti[%s] = model->ft%s_%s;\n" % (fromState, fromState, endState))
     outputFile.write("\treturn i; \n}\n\n")
