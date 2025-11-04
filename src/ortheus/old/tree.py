@@ -193,7 +193,7 @@ class DistancePair:
         self.leafNo1 = leafNo1
         self.leafNo2 = leafNo2
     
-    def __eq__(self, distancePair):
+    def __eq__(self, distancePair):  # This equality method is required by 'total_ordering'.
         return self.distance == distancePair.distance
 
     def __gt__(self, distancePair):
