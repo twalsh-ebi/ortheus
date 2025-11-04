@@ -45,8 +45,8 @@ class TestCase(unittest.TestCase):
             encodePath = TestStatus.getPathToDataSets() + "/MAY-2005/ENm001"
             outputPath = TestStatus.getPathToDataSets() + "/ortheus/encodeTest"
             #treeString = '(((((((((((((human:0.006969,chimp:0.009727):0.025291,((baboon:0.008968):0.011019):0.024581):0.023649):0.066673):0.018405,((rat:0.081244,mouse:0.072818):0.238435):0.021892):0.02326,(((cow:0.164728,(cat:0.109852,dog:0.107805):0.049576):0.004663):0.010883):0.033242):0.028346):0.016015):0.226853):0.063898):0.126639):0.119814):0.16696);'
-            treeString = '((((human:0.006969,chimp:0.009727):0.025291,baboon:0.044568):0.108727,(rat:0.081244,mouse:0.072818):0.260327):0.02326,(cow:0.164728,(cat:0.109852,dog:0.107805):0.049576):0.048788):0.749525;'
-            seqFiles = [ "human.ENm001.fa", "chimp.ENm001.fa", "baboon.ENm001.fa", "rat.ENm001.fa", "mouse.ENm001.fa", "cow.ENm001.fa", "cat.ENm001.fa", "dog.ENm001.fa" ]
+            treeString = '((((human:0.006969,chimp:0.009727):0.025291,baboon:0.044568):0.108727,(rat:0.081244,mouse:0.072818):0.260327):0.02326,(cow:0.164728,dog:0.157381):0.048788):0.749525;'
+            seqFiles = [ "human.ENm001.fa", "chimp.ENm001.fa", "baboon.ENm001.fa", "rat.ENm001.fa", "mouse.ENm001.fa", "cow.ENm001.fa", "dog.ENm001.fa" ]
             seqFiles = [ encodePath + "/" + i for i in seqFiles ]
             outputFile = outputPath + "/outputENm001.mfa"
             command = "Ortheus.py -e %s -d '%s' -f %s -j -a -b" % \
